@@ -1,12 +1,9 @@
 package discordrpc
 
-import (
-	"time"
-)
-
 type Activity struct {
 	State          string
 	Details        string
+	Type int64
 	LargeImageKey  string
 	LargeImageText string
 	SmallImageKey  string
@@ -30,8 +27,8 @@ type ActivitySecrets struct {
 }
 
 type ActivityTimestamps struct {
-	Start *time.Time
-	End   *time.Time
+	Start int64
+	End   int64
 }
 
 type Presence struct{ *Client }

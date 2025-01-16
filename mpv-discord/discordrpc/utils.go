@@ -37,6 +37,7 @@ func mapActivityMainPayload(activity Activity) *payloads.ActivityMain {
 	payload := new(payloads.ActivityMain)
 	payload.State = activity.State
 	payload.Details = activity.Details
+	payload.Type = activity.Type
 	payload.Assets = struct {
 		LargeImage string `json:"large_image,omitempty"`
 		LargeText  string `json:"large_text,omitempty"`
@@ -58,12 +59,8 @@ func mapActivityMainPayload(activity Activity) *payloads.ActivityMain {
 	}
 	if activity.Timestamps != nil {
 		var start, end int64
-		if activity.Timestamps.Start != nil {
-			start = activity.Timestamps.Start.Unix()
-		}
-		if activity.Timestamps.End != nil {
-			end = activity.Timestamps.End.Unix()
-		}
+		start = activity.Timestamps.Start
+		end = activity.Timestamps.End
 		payload.Timestamps = &struct {
 			Start int64 `json:"start,omitempty"`
 			End   int64 `json:"end,omitempty"`

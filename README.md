@@ -1,4 +1,4 @@
-<h1 align="center">mpv-discord</h1>
+<h1 align="center">mpv-discord-resurrected</h1>
 
 <p align="center">
   <b><small>Discord Rich Presence Integration for MPV Media Player</small></b>
@@ -10,17 +10,21 @@
 </p>
 
 <p align="center">
-  <sub><b>Left:</b> looping song in playlist (mouse hovering on small icon)</sub>
+  <sub><b>Left:</b> playing a movie</sub>
   <br>
   <sub><b>Right:</b> paused in movie</sub>
 </p>
 
 <p align="center">
-  <a href="https://github.com/tnychn/mpv-discord/releases"><img alt="github releases" src="https://img.shields.io/github/v/release/tnychn/mpv-discord"></a>
-  <a href="https://github.com/tnychn/mpv-discord/releases"><img alt="release date" src="https://img.shields.io/github/release-date/tnychn/mpv-discord"></a>
-  <a href="https://github.com/tnychn/mpv-discord/releases"><img alt="downloads" src="https://img.shields.io/github/downloads/tnychn/mpv-discord/total"></a>
-  <a href="./LICENSE.txt"><img alt="license" src="https://img.shields.io/github/license/tnychn/mpv-discord"></a>
+<img alt="license" src="https://img.shields.io/github/license/tnychn/mpv-discord"></a>
 </p>
+
+> [!NOTE]
+> This is a maintained fork of [tnychn/mpv-discord](https://github.com/tnychn/mpv-discord)
+
+
+> [!NOTE]
+> "I" in the README refers to [tnychn](https://github.com/tnychn).
 
 ## Features
 
@@ -98,17 +102,6 @@ Then, set the `client_id` option in the config to the application ID.
 
 You can also find the already provided client ids and their image assets [here](./assets/).
 
-<p align="center">
-  <img alt="3" src="./3.png" width="30%" />
-  <img alt="4" src="./4.png" width="50%" />
-</p>
-
-<p align="center">
-  <sub>Using mpv-discord with IINA, a media player based on mpv.</sub>
-  <br>
-  <sub>Client ID: 834116350884577280</sub>
-</p>
-
 ## How It Works
 
 This plugin consists of 3 files.
@@ -131,7 +124,7 @@ feel free to open an issue, or even better, open a pull request. All contributio
 ---
 
 <p align="center">
-  <sub><strong>~ crafted with ♥︎ by tnychn ~</strong></sub>
+  <sub><strong>~ crafted with ♥︎ by tnychn & maintaned with same ♥︎  by CosmicPredator ~</strong></sub>
   <br>
-  <sub><strong>MIT © 2024 Tony Chan</strong></sub>
+  <sub><strong>MIT © 2024 tnychn & Cosmic Predator</strong></sub>
 </p>

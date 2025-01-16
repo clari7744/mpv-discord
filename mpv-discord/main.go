@@ -26,6 +26,12 @@ func init() {
 	presence = discordrpc.NewPresence(os.Args[2])
 }
 
+var currTime int64 = time.Now().Local().UnixMilli()
+
+func refreshCurrTime() {
+	currTime = time.Now().Local().UnixMilli()
+}
+
 func getActivity() (activity discordrpc.Activity, err error) {
 	getProperty := func(key string) (prop interface{}) {
 		prop, err = client.GetProperty(key)
@@ -45,6 +51,7 @@ func getActivity() (activity discordrpc.Activity, err error) {
 
 	// Details
 	activity.Details = getPropertyString("media-title")
+	fileFormat := getPropertyString("file-format")
 	metaTitle := getProperty("metadata/by-key/Title")
 	metaArtist := getProperty("metadata/by-key/Artist")
 	metaAlbum := getProperty("metadata/by-key/Album")
@@ -60,19 +67,16 @@ func getActivity() (activity discordrpc.Activity, err error) {
 		activity.State += " on " + metaAlbum.(string)
 	}
 	if activity.State == "" {
-		if aid, ok := getProperty("aid").(string); !ok || aid != "no" {
-			activity.State += "A"
+		if aid, ok := getProperty("aid").(string); !ok || aid != "false" {
+			activity.Type = 2
+			activity.State += "Audio"
 		}
-		if vid, ok := getProperty("vid").(string); !ok || vid != "no" {
-			activity.State += "V"
+		activity.State += "/"
+		if vid, ok := getProperty("vid").(string); !ok || vid != "false" {
+			activity.State += "Video"
+			activity.Type = 3
 		}
-		_timePos := getProperty("time-pos")
-		_duration := getProperty("duration")
-		if _timePos != nil && _duration != nil {
-			timePos := time.Unix(int64(_timePos.(float64)), 0).UTC().Format("15:04:05")
-			duration := time.Unix(int64(_duration.(float64)), 0).UTC().Format("15:04:05")
-			activity.State += fmt.Sprintf(": %s/%s", timePos, duration)
-		}
+		activity.State += (": " + fileFormat)
 	}
 
 	// Small Image
@@ -103,12 +107,20 @@ func getActivity() (activity discordrpc.Activity, err error) {
 	}
 
 	// Timestamps
+	_duration := getProperty("duration")
+	durationMillis := int64(_duration.(float64))
+	_timePos := getProperty("time-pos")
+	timePosMills := int64(_timePos.(float64))
+
+	startTimePos := currTime - (timePosMills * 1000)
+	duration := startTimePos + (durationMillis * 1000)
+
 	if pausing != nil && !pausing.(bool) {
-		if timeRemaining := getPropertyString("time-remaining"); timeRemaining != "" {
-			d, _ := time.ParseDuration(timeRemaining + "s")
-			endTime := time.Now().Add(d)
-			activity.Timestamps = &discordrpc.ActivityTimestamps{End: &endTime}
+		activity.Timestamps = &discordrpc.ActivityTimestamps{
+			Start: startTimePos, 
+			End: duration,
 		}
+		refreshCurrTime()
 	}
 	return
 }

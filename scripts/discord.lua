@@ -5,7 +5,7 @@ local utils = require("mp.utils")
 local options = {
 	key = "D",
 	active = true,
-	client_id = "737663962677510245",
+	client_id = "1328997690339758141",
 	binary_path = "",
 	socket_path = "/tmp/mpvsocket",
 	use_static_socket_path = true,
@@ -34,7 +34,7 @@ if not file_exists(options.binary_path) then
 end
 
 local version = "1.6.1"
-msg.info(("mpv-discord v%s by tnychn"):format(version))
+msg.info(("mpv-discord v%s by CosmicPredator"):format(version))
 
 local socket_path = options.socket_path
 if not options.use_static_socket_path then
