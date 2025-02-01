@@ -61,9 +61,9 @@ I found it hard to set up the dependencies and I also don't want to mess up my e
 
 Installer scripts for Windows, Linux and OSX are provided.
 
-1. Download .zip from [the latest release](https://github.com/tnychn/mpv-discord/releases/latest) and extract it.
+1. Download .zip from [the latest release](https://github.com/CosmicPredator/mpv-discord/releases/latest) and extract it.
     * or you can download .zip by clicking on the green download button in GitHub
-    * or you can also use `git clone https://github.com/tnychn/mpv-discord.git`
+    * or you can also use `git clone https://github.com/CosmicPredator/mpv-discord.git`
 2. Run the installer script of your platform.
     * run `install_darwin.sh` in Terminal for OSX
     * run `install_linux.sh` in Terminal for Linux
