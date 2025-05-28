@@ -23,9 +23,10 @@ type Activity struct {
 }
 
 type ActivityMain struct {
+	Name    string `json:"name,omitempty"`
 	State   string `json:"state,omitempty"`
 	Details string `json:"details,omitempty"`
-	Type int64 `json:"type,omitempty"`
+	Type    int64  `json:"type,omitempty"`
 	Assets  struct {
 		LargeImage string `json:"large_image,omitempty"`
 		LargeText  string `json:"large_text,omitempty"`

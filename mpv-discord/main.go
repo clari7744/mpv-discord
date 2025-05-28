@@ -50,22 +50,28 @@ func getActivity() (activity discordrpc.Activity, err error) {
 	}
 
 	// Details
+	activity.Name = getPropertyString("media-title")
 	activity.Details = getPropertyString("media-title")
 	fileFormat := getPropertyString("file-format")
 	metaTitle := getProperty("metadata/by-key/Title")
 	metaArtist := getProperty("metadata/by-key/Artist")
 	metaAlbum := getProperty("metadata/by-key/Album")
 	if metaTitle != nil {
+		activity.Name = metaTitle.(string)
 		activity.Details = metaTitle.(string)
 	}
 
+	activity.Type = 2 // Default to Listening to
 	// State
 	if metaArtist != nil {
-		activity.State += " by " + metaArtist.(string)
+		// activity.State += " by " + metaArtist.(string)
+		activity.State = metaArtist.(string)
 	}
 	if metaAlbum != nil {
-		activity.State += " on " + metaAlbum.(string)
+		// activity.State += " on " + metaAlbum.(string)
+		activity.LargeImageText = metaAlbum.(string) + " - " + activity.LargeImageText
 	}
+
 	if activity.State == "" {
 		if aid, ok := getProperty("aid").(string); !ok || aid != "false" {
 			activity.Type = 2
@@ -117,8 +123,8 @@ func getActivity() (activity discordrpc.Activity, err error) {
 
 	if pausing != nil && !pausing.(bool) {
 		activity.Timestamps = &discordrpc.ActivityTimestamps{
-			Start: startTimePos, 
-			End: duration,
+			Start: startTimePos,
+			End:   duration,
 		}
 		refreshCurrTime()
 	}
@@ -166,6 +172,7 @@ func main() {
 
 	for range time.Tick(time.Second) {
 		activity, err := getActivity()
+		// log.Printf("(discord-ipc): activity: %+v\n", activity)
 		if err != nil {
 			if errors.Is(err, syscall.EPIPE) {
 				break

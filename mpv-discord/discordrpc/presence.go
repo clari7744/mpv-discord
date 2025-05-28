@@ -1,9 +1,10 @@
 package discordrpc
 
 type Activity struct {
+	Name           string
 	State          string
 	Details        string
-	Type int64
+	Type           int64
 	LargeImageKey  string
 	LargeImageText string
 	SmallImageKey  string

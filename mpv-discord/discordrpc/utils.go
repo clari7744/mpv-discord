@@ -35,6 +35,7 @@ func newActivityPayload() payloads.Activity {
 
 func mapActivityMainPayload(activity Activity) *payloads.ActivityMain {
 	payload := new(payloads.ActivityMain)
+	payload.Name = activity.Name
 	payload.State = activity.State
 	payload.Details = activity.Details
 	payload.Type = activity.Type
