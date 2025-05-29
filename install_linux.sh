@@ -18,6 +18,7 @@ fi
 
 echo "Copying: discord.conf"
 cp ./script-opts/discord.conf "$script_opts_dir"
+sed -i "s|BINARY_PATH_REPLACE|$mpv_dir/discord|g" "$script_opts_dir/discord.conf"
 
 echo "Copying: discord.lua"
 cp ./scripts/discord.lua "$scripts_dir"
@@ -29,8 +30,9 @@ echo
 echo "Path to mpv directory: $mpv_dir"
 echo "Path to config file: $script_opts_dir/discord.conf"
 echo
-echo "You're almost done!"
-echo "Please manually edit the following option in the config file:"
-echo
-echo "  binary_path=$mpv_dir/discord"
+echo "You're all set!"
+# echo "You're almost done!"
+# echo "Please manually edit the following option in the config file:"
+# echo
+# echo "  binary_path=$mpv_dir/discord"
 echo

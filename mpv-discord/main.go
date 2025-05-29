@@ -1,11 +1,17 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"log"
+	"mime/multipart"
+	"net/http"
 	"os"
+	"regexp"
+	"strings"
 	"syscall"
 	"time"
 
@@ -14,9 +20,12 @@ import (
 )
 
 var (
-	client   *mpvrpc.Client
-	presence *discordrpc.Presence
+	client       *mpvrpc.Client
+	presence     *discordrpc.Presence
+	discordToken string
+	tinyToken    string
 )
+var urls = map[string]string{}
 
 func init() {
 	log.SetOutput(os.Stdout)
@@ -24,12 +33,143 @@ func init() {
 
 	client = mpvrpc.NewClient()
 	presence = discordrpc.NewPresence(os.Args[2])
+	discordToken = os.Args[3]
+	tinyToken = os.Args[4]
 }
 
 var currTime int64 = time.Now().Local().UnixMilli()
 
 func refreshCurrTime() {
 	currTime = time.Now().Local().UnixMilli()
+}
+
+func getAppId() (appId string, err error) {
+	if discordToken == "" {
+		return "", errors.New("discord token is not provided")
+	}
+	req, _ := http.NewRequest("GET", "https://discord.com/api/v10/applications/@me", nil)
+	req.Header.Set("Authorization", "Bot "+discordToken)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	var appInfo struct {
+		ID string `json:"id"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&appInfo); err != nil {
+		return "", err
+	}
+	return appInfo.ID, nil
+}
+
+func uploadImage(coverPath string) (url string, err error) {
+	appId, err := getAppId()
+	if err != nil {
+		return "", err
+	}
+	file, err := os.Open(coverPath)
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	part, _ := writer.CreateFormFile("file", "cover.png")
+	io.Copy(part, file)
+	writer.Close()
+
+	req, _ := http.NewRequest("POST", fmt.Sprintf("https://discord.com/api/v10/applications/%s/attachment", appId), body)
+	req.Header.Set("Authorization", "Bot "+discordToken)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	var result struct {
+		Attachment struct {
+			URL string `json:"url"`
+		} `json:"attachment"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return "", err
+	}
+	return result.Attachment.URL, nil
+}
+
+func getTinyURL(url string) (tinyURL string, err error) {
+	if tinyToken == "" {
+		return "", errors.New("TinyURL API token is not provided")
+	}
+
+	payload := map[string]string{"url": url}
+	jsonData, _ := json.Marshal(payload)
+
+	req, _ := http.NewRequest("POST", "https://api.tinyurl.com/create?api_token="+tinyToken, bytes.NewBuffer(jsonData))
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	var result struct {
+		Data struct {
+			TinyURL string `json:"tiny_url"`
+		} `json:"data"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return "", err
+	}
+
+	return result.Data.TinyURL, nil
+}
+
+func getCoverPath(path string) (coverPath string, err error) {
+	coverRegexp := regexp.MustCompile(`(?i)^cover\.(jpe?g|png)$`)
+	if files, err := os.ReadDir(path); err == nil {
+		for _, file := range files {
+			if coverRegexp.MatchString(file.Name()) {
+				return path + "/" + file.Name(), nil
+			}
+		}
+	}
+	return "", fmt.Errorf("no cover image found in %s", path)
+}
+
+func getAlbumUrl(path string) (tinyUrl string, err error) {
+	coverPath, err := getCoverPath(path)
+	if err != nil {
+		return "", err
+	}
+
+	if existsTinyUrl, ok := urls[coverPath]; ok {
+		return existsTinyUrl, nil
+	}
+
+	if discordToken == "" || tinyToken == "" {
+		return "", errors.New("discord token and tinyurl token are both required for this functionality")
+	}
+	// Upload the image and get the URL
+	url, err := uploadImage(coverPath)
+	if err != nil {
+		return "", err
+	}
+
+	tinyUrl, err = getTinyURL(url)
+	if err != nil {
+		return "", err
+	}
+
+	urls[coverPath] = tinyUrl
+	return tinyUrl, nil
 }
 
 func getActivity() (activity discordrpc.Activity, err error) {
@@ -43,24 +183,29 @@ func getActivity() (activity discordrpc.Activity, err error) {
 	}
 
 	// Large Image
-	activity.LargeImageKey = "mpv"
+	path := getPropertyString("path")
+	path = path[0:strings.LastIndex(path, "/")]
+	activity.LargeImageKey, err = getAlbumUrl(path)
+	if err != nil {
+		activity.LargeImageKey = "mpv"
+		// 	log.Println("Error getting album cover:", err)
+		// } else {
+		// 	log.Println("Album cover URL:", activity.LargeImageKey)
+	}
+
 	activity.LargeImageText = "mpv"
 	if version := getPropertyString("mpv-version"); version != "" {
 		activity.LargeImageText += " " + version[4:]
 	}
 
 	// Details
-	activity.Name = getPropertyString("media-title")
-	activity.Details = getPropertyString("media-title")
+	title := getPropertyString("media-title")
 	fileFormat := getPropertyString("file-format")
-	metaTitle := getProperty("metadata/by-key/Title")
 	metaArtist := getProperty("metadata/by-key/Artist")
 	metaAlbum := getProperty("metadata/by-key/Album")
-	if metaTitle != nil {
-		activity.Name = metaTitle.(string)
-		activity.Details = metaTitle.(string)
-	}
 
+	activity.Name = title
+	activity.Details = title
 	activity.Type = 2 // Default to Listening to
 	// State
 	if metaArtist != nil {
